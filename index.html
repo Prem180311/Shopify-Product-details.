@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>5Core Shopify Products Dashboard</title>
+  <style>
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo {
+  width: 120px;
+  height: 130px;
+  border-radius: 80%;
+  background: #f5f6fa;
+  object-fit: cover;
+}
+
+    body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f6fa;
+      color: #333;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    /* 3D Red Heading */
+    h1 {
+      
+      font-size: 3.5em;
+      color: #e74c3c; /* base red */
+      text-shadow:
+        1px 1px 0 #c0392b,
+        2px 2px 0 #a93226,
+        3px 3px 2px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+    /* Table container */
+    .table-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      padding: 20px;
+    }
+  table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      min-width: 800px;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+    }
+   thead th {
+      background: #192a56;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    /* Zebra striping & hover */
+    tbody tr:nth-child(even) {
+      background: #f1f2f6;
+    }
+    tbody tr:hover {
+      background: #dcdde1;
+    }
+    img {
+      max-width: 60px;
+      height: auto;
+      display: block;
+    }
+    
+    /* Borders & rounded corners */
+    thead th:first-child { border-top-left-radius: 6px; }
+    thead th:last-child  { border-top-right-radius: 6px; }
+    tbody tr:last-child td:first-child  { border-bottom-left-radius: 6px; }
+    tbody tr:last-child td:last-child   { border-bottom-right-radius: 6px; }
+
+    /* Small text */
+    .small {
+      display: block;
+      font-size: 0.8em;
+      color: #555;
+      margin-top: 4px;
+    }
+    .variant {
+      margin-bottom: 6px;
+      font-size: 0.9em;
+      color: #333;
+    }
+    .small {
+      font-size: 0.8em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>5Core Shopify Products Dashboard</h1>
+  <img src="logo.jpg" class="logo.jpg" alt="logo.jpg">
+</div>
+  <table>
+    <thead>
+      <tr>
+         <th>S.No</th>
+        <th>ID</th>
+        <th>Title &amp; Handle</th>
+        <th>Vendor &amp; Type</th>
+        <th>Tags</th>
+        <th>Status</th>
+        <th>Dates</th>
+        <th>Variants</th>
+        <th>Image</th>
+      </tr>
+    </thead>
+    <tbody id="products-body">
+      <!-- rows go here -->
+    </tbody>
+  </table>
+
+  <script>
+    fetch('http://localhost:3400/getdata')
+      .then(res => res.json())
+      .then(json => {
+        const tbody = document.getElementById('products-body');
+        tbody.innerHTML = '';
+
+        if (!json.products || json.products.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8">No products returned.</td></tr>';
+          return;
+        }
+
+        json.products.forEach(p => {
+          // build variants string
+          const variantsHTML = (p.variants || []).map(v =>
+            `<div class="variant">
+               <span class="small"><strong>Title:</strong> ${v.title}</span><br>
+               <span class="small"><strong>SKU:</strong> ${v.sku || '—'}</span>,
+               <span class="small"><strong>Price:</strong> ${v.price}</span>,
+               <span class="small"><strong>Inv:</strong> ${v.inventory_quantity}</span>
+             </div>`
+          ).join('');
+
+          // single image
+          const imgHTML = p.image && p.image.src
+            ? `<img src="${p.image.src}" alt="Product Image">`
+            : '—';
+
+          // dates block
+          const datesHTML = `
+            <div class="small"><strong>Created:</strong> ${p.created_at}</div>
+            <div class="small"><strong>Updated:</strong> ${p.updated_at}</div>
+            <div class="small"><strong>Published:</strong> ${p.published_at}</div>
+          `;
+
+          // assemble row
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${p.id}</td>
+            <td>
+              <strong>${p.title}</strong><br>
+              <span class="small">/${p.handle}</span>
+            </td>
+            <td>
+              <span class="small"><strong>Vendor:</strong> ${p.vendor}</span><br>
+              <span class="small"><strong>Type:</strong> ${p.product_type}</span>
+            </td>
+            <td>${p.tags || '—'}</td>
+            <td>${p.status}</td>
+            <td>${datesHTML}</td>
+            <td>${variantsHTML}</td>
+            <td>${imgHTML}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('products-body').innerHTML =
+          '<tr><td colspan="8">Error loading data. Check console.</td></tr>';
+      });
+  </script>
+<script>
+  fetch('http://localhost:3400/getdata')
+    .then(res => res.json())
+    .then(json => {
+      const tbody = document.getElementById('products-body');
+      tbody.innerHTML = '';
+
+      if (!json.products || json.products.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9">No products returned.</td></tr>';
+        return;
+      }
+
+      json.products.forEach((p, index) => {
+        const variantsHTML = (p.variants || []).map(v =>
+          `<div class="variant">
+             <span class="small"><strong>Title:</strong> ${v.title}</span><br>
+             <span class="small"><strong>SKU:</strong> ${v.sku || '—'}</span>,
+             <span class="small"><strong>Price:</strong> ${v.price}</span>,
+             <span class="small"><strong>Inv:</strong> ${v.inventory_quantity}</span>
+           </div>`
+        ).join('');
+
+        const imgHTML = p.image && p.image.src
+          ? `<img src="${p.image.src}" alt="Product Image">`
+          : '—';
+
+        const datesHTML = `
+          <div class="small"><strong>Created:</strong> ${p.created_at}</div>
+          <div class="small"><strong>Updated:</strong> ${p.updated_at}</div>
+          <div class="small"><strong>Published:</strong> ${p.published_at}</div>
+        `;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${p.id}</td>
+          <td>
+            <strong>${p.title}</strong><br>
+            <span class="small">/${p.handle}</span>
+          </td>
+          <td>
+            <span class="small"><strong>Vendor:</strong> ${p.vendor}</span><br>
+            <span class="small"><strong>Type:</strong> ${p.product_type}</span>
+          </td>
+          <td>${p.tags || '—'}</td>
+          <td>${p.status}</td>
+          <td>${datesHTML}</td>
+          <td>${variantsHTML}</td>
+          <td>${imgHTML}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('products-body').innerHTML =
+        '<tr><td colspan="9">Error loading data. Check console.</td></tr>';
+    });
+</script>
+
+</body>
+</html>
